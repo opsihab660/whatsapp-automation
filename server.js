@@ -12,24 +12,30 @@ const { getLLMResponse } = require('./gptLLM'); // Import from gptLLM.js
 
 // --- p-limit import solution ---
 let pLimit;
-try {
-    const pLimitPackage = require('p-limit');
-    pLimit = pLimitPackage.default || pLimitPackage;
-    if (typeof pLimit !== 'function') {
-        if (pLimitPackage && typeof pLimitPackage.default === 'function') {
-            pLimit = pLimitPackage.default;
-        } else {
+// Use dynamic import for ES modules
+(async () => {
+    try {
+        // Dynamic import works in CommonJS modules
+        const pLimitModule = await import('p-limit');
+        // ES modules typically have a default export
+        pLimit = pLimitModule.default;
+
+        if (typeof pLimit !== 'function') {
             throw new Error('pLimit is not a function after attempting to import.');
         }
+
+        console.log('[LLM Setup] p-limit successfully imported');
+        // Initialize the server after p-limit is loaded
+        initializeServer();
+    } catch (e) {
+        console.error("FATAL: Failed to import or resolve 'p-limit'. Ensure it's installed (npm install p-limit) and not corrupted.", e);
+        process.exit(1);
     }
-} catch (e) {
-    console.error("FATAL: Failed to import or resolve 'p-limit'. Ensure it's installed (npm install p-limit) and not corrupted.", e);
-    process.exit(1);
-}
+})();
 // --- p-limit import end ---
 
 // --- Environment variables and constants ---
-const PORT = process.env.PORT || 3001; // Changed to port 3001 to avoid conflicts
+const PORT = process.env.PORT || 3002; // Changed to port 3002 to avoid conflicts
 const SESSION_NAME = process.env.SESSION_NAME || 'api-whatsapp-bot-session';
 const CONCURRENCY_LIMIT_LLM = parseInt(process.env.CONCURRENCY_LIMIT_LLM) || 2;
 const MAX_CONVERSATION_HISTORY = parseInt(process.env.MAX_CONVERSATION_HISTORY) || 10;
@@ -40,9 +46,7 @@ const PUPPETEER_EXECUTABLE_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || undef
 // Check if running on Render.com
 const IS_RENDER = process.env.RENDER === 'true';
 
-const llmLimit = pLimit(CONCURRENCY_LIMIT_LLM);
 console.log(`[Setup] Session Name: ${SESSION_NAME}`);
-console.log(`[Setup] LLM Concurrency Limit: ${CONCURRENCY_LIMIT_LLM}`);
 console.log(`[Setup] Max Conversation History: ${MAX_CONVERSATION_HISTORY}`);
 // --- ---
 
@@ -50,8 +54,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // For development, specify origin in production
-        methods: ["GET", "POST"]
+        origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['https://your-frontend-domain.com'],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
@@ -63,7 +68,10 @@ let aiResponsesEnabled = true; // Flag to toggle AI responses on/off
 // --- ---
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['https://your-frontend-domain.com'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'frontend'))); // Serve frontend files
@@ -325,6 +333,9 @@ async function stopVenomBot() {
     }
 }
 
+// Global variable to store the llmLimit function
+let globalLlmLimit;
+
 function attachMessageListener(client) {
     client.onMessage(async (message) => {
         io.emit('new_message', {
@@ -359,7 +370,13 @@ function attachMessageListener(client) {
             return;
         }
 
-        llmLimit(async () => {
+        // Make sure we have the llmLimit function
+        if (!globalLlmLimit) {
+            console.error('[VenomCtrl] LLM limit function not initialized yet');
+            return;
+        }
+
+        globalLlmLimit(async () => {
             try {
                 let convHistory = await loadConversationHistory(message.chatId);
                 let userMsgForLLM = message.body;
@@ -545,14 +562,21 @@ function startSessionMonitor() {
     }, CHECK_INTERVAL);
 }
 
-// --- Start server ---
-server.listen(PORT, () => {
-    console.log(`[Server] API Server listening on http://localhost:${PORT}`);
-    console.log(`[API Endpoints] Available at http://localhost:${PORT}/api`);
+// --- Server initialization function ---
+function initializeServer() {
+    // Initialize the LLM concurrency limiter
+    globalLlmLimit = pLimit(CONCURRENCY_LIMIT_LLM);
+    console.log(`[Setup] LLM Concurrency Limit: ${CONCURRENCY_LIMIT_LLM}`);
 
-    // Start the session monitor
-    startSessionMonitor();
-});
+    // Start the server
+    server.listen(PORT, () => {
+        console.log(`[Server] API Server listening on http://localhost:${PORT}`);
+        console.log(`[API Endpoints] Available at http://localhost:${PORT}/api`);
+
+        // Start the session monitor
+        startSessionMonitor();
+    });
+}
 // --- ---
 
 // --- Graceful Shutdown ---
