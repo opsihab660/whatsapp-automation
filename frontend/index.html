@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Automation Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-whatsapp"></i> WhatsApp Automation Dashboard</h1>
+        </header>
+
+        <div class="dashboard">
+            <div class="status-panel">
+                <div class="status-card">
+                    <h2>Bot Status</h2>
+                    <div class="status-indicator">
+                        <span id="status-badge" class="badge offline">OFFLINE</span>
+                        <p id="status-text">Bot is currently offline</p>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="start-bot" class="btn btn-success"><i class="fas fa-play"></i> Start Bot</button>
+                        <button id="stop-bot" class="btn btn-danger" disabled><i class="fas fa-stop"></i> Stop Bot</button>
+                    </div>
+                    <div class="ai-toggle-container">
+                        <button id="toggle-ai" class="btn btn-info">
+                            <i class="fas fa-robot"></i> <span id="ai-toggle-text">Suno AI: ON</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="qr-card">
+                    <h2>QR Code</h2>
+                    <div id="qr-container">
+                        <p id="qr-placeholder">QR code will appear here when bot is starting...</p>
+                        <div id="qr-code"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="messages-panel">
+                <h2>Message Log</h2>
+                <div class="filter-controls">
+                    <button id="filter-all" class="filter-btn active">All</button>
+                    <button id="filter-user" class="filter-btn">User Messages</button>
+                    <button id="filter-ai" class="filter-btn">AI Replies</button>
+                    <button id="clear-messages" class="filter-btn clear"><i class="fas fa-trash"></i> Clear</button>
+                </div>
+                <div id="messages-container">
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <p>No messages yet. Start the bot to see incoming messages.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 WhatsApp Automation Dashboard</p>
+    </footer>
+
+    <!-- Socket.io client library -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- QR Code library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Custom JS -->
+    <script src="js/app.js"></script>
+</body>
+</html>

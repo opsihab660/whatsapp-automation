@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: whatsapp-automation
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GPT_API_KEY
+        sync: false
+      - key: GPT_BASE_URL
+        sync: false
+      - key: GPT_MODEL_NAME
+        sync: false
+      - key: SESSION_NAME
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: CONCURRENCY_LIMIT_LLM
+        value: 2
+      - key: MAX_CONVERSATION_HISTORY
+        value: 10

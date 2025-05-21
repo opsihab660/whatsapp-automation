@@ -1,0 +1,20 @@
+[2025-05-20T06:15:58.054Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: initBrowser
+[2025-05-20T06:15:58.803Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: openBrowser
+[2025-05-20T06:15:58.805Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: initWhatsapp
+[2025-05-20T06:15:59.526Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: successPageWhatsapp
+[2025-05-20T06:16:04.034Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: isLogged
+[2025-05-20T06:16:04.034Z] [INFO] Venom client successfully connected/restored and ready!
+[2025-05-20T06:16:04.242Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: waitForLogin
+[2025-05-20T06:16:04.243Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: waitChat
+[2025-05-20T06:16:04.585Z] [INFO] Venom Status - Session: my-whatsapp-gpt-bot, Status: successChat
+[2025-05-20T06:16:04.586Z] [INFO] Venom client successfully connected/restored and ready!
+[2025-05-20T06:16:04.586Z] [INFO] Venom client instance created successfully.
+[2025-05-20T06:16:04.586Z] [ERROR] One or more essential Venom client functions (reply, sendSeen, sendText) are missing! Bot functionality will be severely limited. | Data: {"availableKeys":["browser","page","session","options","spinnies","spinStatus","autoCloseInterval","statusFind","listenerEmitter","typingMutex"]}
+[2025-05-20T06:16:04.586Z] [INFO] GPT LLM Bot with Conversation History is now active for session: my-whatsapp-gpt-bot. Waiting for messages...
+[2025-05-20T06:16:41.818Z] [DEBUG] LLM Task End - ID: false_120363398347900460@g.us_3F5F70B10F05812B2FD2_8801796103147@c.us, Chat: 120363398347900460@g.us, Duration: 3.81s
+[2025-05-20T06:17:21.962Z] [DEBUG] LLM Task End - ID: false_120363398347900460@g.us_3F9F7076E46D9FDDD7F6_8801796103147@c.us, Chat: 120363398347900460@g.us, Duration: 3.96s
+[2025-05-20T06:17:59.071Z] [DEBUG] LLM Task End - ID: false_120363398347900460@g.us_3F584E41B48014061D3C_8801796103147@c.us, Chat: 120363398347900460@g.us, Duration: 3.56s
+[2025-05-20T06:18:41.558Z] [DEBUG] LLM Task End - ID: false_120363398347900460@g.us_3F24D6B2F76326EE4FC7_8801796103147@c.us, Chat: 120363398347900460@g.us, Duration: 3.65s
+[2025-05-20T06:18:57.580Z] [DEBUG] LLM Task End - ID: false_120363398347900460@g.us_3F334EC41961C691C759_8801796103147@c.us, Chat: 120363398347900460@g.us, Duration: 3.40s
+[2025-05-20T06:19:56.439Z] [DEBUG] LLM Task End - ID: false_8801796103147@c.us_3F8F9244EB15A7CDDC2A, Chat: 8801796103147@c.us, Duration: 3.92s
+[2025-05-20T06:27:03.664Z] [DEBUG] LLM Task End - ID: false_8801796103147@c.us_3F29DBE180DCC682C7DF, Chat: 8801796103147@c.us, Duration: 4.08s

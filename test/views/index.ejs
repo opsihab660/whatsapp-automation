@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Automation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        .message-log {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .received {
+            background-color: #e3f2fd;
+        }
+        .sent {
+            background-color: #e8f5e9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">WhatsApp Automation</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>WhatsApp Connection</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div id="status-container" class="mb-3">
+                            <span id="status-badge" class="badge bg-secondary">Not Connected</span>
+                        </div>
+                        <div id="qrcode-container" class="mb-3">
+                            <canvas id="qrcode"></canvas>
+                        </div>
+                        <button id="init-btn" class="btn btn-primary">Initialize WhatsApp</button>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Send Message</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="send-form">
+                            <div class="mb-3">
+                                <label for="recipient" class="form-label">Recipient (with country code)</label>
+                                <input type="text" class="form-control" id="recipient" placeholder="e.g., 919876543210@c.us" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Message Logs</h5>
+                        <button id="refresh-logs" class="btn btn-sm btn-outline-primary">Refresh</button>
+                    </div>
+                    <div class="card-body message-log" id="message-log">
+                        <div class="text-center text-muted">No messages yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusBadge = document.getElementById('status-badge');
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            const qrcodeCanvas = document.getElementById('qrcode');
+            const initBtn = document.getElementById('init-btn');
+            const sendForm = document.getElementById('send-form');
+            const messageLog = document.getElementById('message-log');
+            const refreshLogsBtn = document.getElementById('refresh-logs');
+            
+            // Check status periodically
+            function checkStatus() {
+                fetch('/api/whatsapp/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.status.isReady) {
+                                statusBadge.textContent = 'Connected';
+                                statusBadge.className = 'badge bg-success';
+                                qrcodeContainer.style.display = 'none';
+                            } else if (data.status.hasQR) {
+                                statusBadge.textContent = 'QR Code Ready';
+                                statusBadge.className = 'badge bg-warning';
+                                getQRCode();
+                            } else {
+                                statusBadge.textContent = 'Initializing';
+                                statusBadge.className = 'badge bg-info';
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error checking status:', error));
+            }
+            
+            // Get QR code
+            function getQRCode() {
+                fetch('/api/whatsapp/qr')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.qrCode) {
+                            QRCode.toCanvas(qrcodeCanvas, data.qrCode, function (error) {
+                                if (error) console.error(error);
+                                qrcodeContainer.style.display = 'block';
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error getting QR code:', error));
+            }
+            
+            // Initialize WhatsApp client
+            initBtn.addEventListener('click', function() {
+                statusBadge.textContent = 'Initializing...';
+                statusBadge.className = 'badge bg-info';
+                
+                fetch('/api/whatsapp/init', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Initialization started');
+                        // Start checking status
+                        checkStatus();
+                        // Set interval to check status every 5 seconds
+                        setInterval(checkStatus, 5000);
+                    } else {
+                        console.error('Initialization failed:', data.message);
+                        statusBadge.textContent = 'Failed to Initialize';
+                        statusBadge.className = 'badge bg-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error initializing:', error);
+                    statusBadge.textContent = 'Error';
+                    statusBadge.className = 'badge bg-danger';
+                });
+            });
+            
+            // Send message
+            sendForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const recipient = document.getElementById('recipient').value;
+                const message = document.getElementById('message').value;
+                
+                fetch('/api/whatsapp/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        to: recipient,
+                        message: message
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Message sent successfully!');
+                        document.getElementById('message').value = '';
+                        loadMessageLogs();
+                    } else {
+                        alert('Failed to send message: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                    alert('Error sending message. Check console for details.');
+                });
+            });
+            
+            // Load message logs
+            function loadMessageLogs() {
+                fetch('/api/messages')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.count > 0) {
+                                messageLog.innerHTML = '';
+                                data.data.forEach(log => {
+                                    const logItem = document.createElement('div');
+                                    logItem.className = `card mb-2 ${log.type}`;
+                                    
+                                    const timestamp = new Date(log.timestamp).toLocaleString();
+                                    const contact = log.type === 'received' ? log.from : log.to;
+                                    
+                                    logItem.innerHTML = `
+                                        <div class="card-body py-2">
+                                            <div class="d-flex justify-content-between">
+                                                <small>${contact}</small>
+                                                <small>${timestamp}</small>
+                                            </div>
+                                            <p class="mb-0">${log.body}</p>
+                                        </div>
+                                    `;
+                                    
+                                    messageLog.appendChild(logItem);
+                                });
+                                
+                                // Scroll to bottom
+                                messageLog.scrollTop = messageLog.scrollHeight;
+                            } else {
+                                messageLog.innerHTML = '<div class="text-center text-muted">No messages yet</div>';
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error loading message logs:', error));
+            }
+            
+            // Refresh logs button
+            refreshLogsBtn.addEventListener('click', loadMessageLogs);
+            
+            // Initial status check
+            checkStatus();
+            
+            // Initial logs load
+            loadMessageLogs();
+            
+            // Set interval to refresh logs every 10 seconds
+            setInterval(loadMessageLogs, 10000);
+        });
+    </script>
+</body>
+</html>
